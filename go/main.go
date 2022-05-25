@@ -1097,7 +1097,7 @@ func getTrend(c echo.Context) error {
 		query := strings.Join(
 			[]string{
 				"SELECT c.`condition` AS `condition`, isu.`id` AS `isu_id`, c.`timestamp` AS `timestamp` FROM isu_condition AS c",
-				"JOIN ( SELECT `jia_isu_uuid` FROM isu WHERE `character` = ? ) AS isu",
+				"JOIN ( SELECT `id`, `jia_isu_uuid` FROM isu WHERE `character` = ? ) AS isu",
 				"ON c.`jia_isu_uuid` = isu.`jia_isu_uuid`",
 				"WHERE NOT EXISTS (",
 				"SELECT 1 FROM isu_condition AS c2",
