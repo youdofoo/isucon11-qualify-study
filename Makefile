@@ -15,3 +15,7 @@ pt:
 .PHONY: slow
 slow:
 	sudo mysqldumpslow -s t | head -n 20
+
+.PHONY: build
+build:
+	cd go && go build -o isucondition main.go
