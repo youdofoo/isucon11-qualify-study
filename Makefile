@@ -8,7 +8,10 @@ alp:
 
 
 SQ_LOG=/var/log/mysql/mariadb-slow.log
-.PHONY: sq
-sq:
+.PHONY: pt
+pt:
 	sudo pt-query-digest ${SQ_LOG}
 
+.PHONY: slow
+slow:
+	sudo mysqldumpslow -s t | head -n 20
