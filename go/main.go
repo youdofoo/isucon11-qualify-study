@@ -273,7 +273,6 @@ func loadUsers() {
 	if err != nil {
 		log.Fatalf("failed to users: %v", err)
 	}
-	userMap = make(map[string]struct{}, len(us))
 	for _, u := range us {
 		userMap[u.JiaUserID] = struct{}{}
 	}
