@@ -1206,10 +1206,12 @@ func postIsuCondition(c echo.Context) error {
 		vs[i] = fmt.Sprintf(`("%s", "%v", %v, "%s", "%s")`, jiaIsuUUID, timestamp, cond.IsSitting, cond.Condition, cond.Message)
 	}
 	_, err = tx.Exec(
-		"INSERT INTO `isu_condition`"+
-			"	(`jia_isu_uuid`, `timestamp`, `is_sitting`, `condition`, `message`)"+
-			"	VALUES %s",
-		strings.Join(vs, ","),
+		fmt.Sprintf(
+			"INSERT INTO `isu_condition`"+
+				"	(`jia_isu_uuid`, `timestamp`, `is_sitting`, `condition`, `message`)"+
+				"	VALUES %s",
+			strings.Join(vs, ","),
+		),
 	)
 	if err != nil {
 		c.Logger().Errorf("db error: %v", err)
