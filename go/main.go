@@ -170,24 +170,7 @@ type JIAServiceRequest struct {
 	IsuUUID       string `json:"isu_uuid"`
 }
 
-var userMap = map[string]struct{}{
-	"confident_chatelet":  {},
-	"crazy_poincare":      {},
-	"dreamy_archimedes":   {},
-	"focused_hamilton":    {},
-	"frosty_herschel":     {},
-	"gifted_cerf":         {},
-	"goofy_ganguly":       {},
-	"happy_haibt":         {},
-	"intelligent_johnson": {},
-	"isucon":              {},
-	"isucon1":             {},
-	"isucon2":             {},
-	"naughty_swartz":      {},
-	"peaceful_aryabhata":  {},
-	"strange_dubinsky":    {},
-	"wonderful_goldstine": {},
-}
+var userMap map[string]struct{}
 
 func getEnv(key string, defaultValue string) string {
 	val := os.Getenv(key)
@@ -266,6 +249,8 @@ func main() {
 	db.SetMaxOpenConns(10)
 	defer db.Close()
 
+	loadUsers()
+
 	postIsuConditionTargetBaseURL = os.Getenv("POST_ISUCONDITION_TARGET_BASE_URL")
 	if postIsuConditionTargetBaseURL == "" {
 		e.Logger.Fatalf("missing: POST_ISUCONDITION_TARGET_BASE_URL")
@@ -274,6 +259,23 @@ func main() {
 
 	serverPort := fmt.Sprintf(":%v", getEnv("SERVER_APP_PORT", "3000"))
 	e.Logger.Fatal(e.Start(serverPort))
+
+}
+
+type User struct {
+	JiaUserID string    `json:"jia_user_id"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+func loadUsers() {
+	var us []User
+	err := db.Get(&us, "SELECT * FROM `user`")
+	if err != nil {
+		log.Fatalf("failed to users: %v", err)
+	}
+	for _, u := range us {
+		userMap[u.JiaUserID] = struct{}{}
+	}
 }
 
 func getSession(r *http.Request) (*sessions.Session, error) {
