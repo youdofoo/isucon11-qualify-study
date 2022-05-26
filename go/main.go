@@ -269,7 +269,7 @@ type User struct {
 
 func loadUsers() {
 	var us []User
-	err := db.Select(&us, "SELECT * FROM `user`")
+	err := db.Get(&us, "SELECT * FROM `user`")
 	if err != nil {
 		log.Fatalf("failed to users: %v", err)
 	}
