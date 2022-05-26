@@ -170,25 +170,6 @@ type JIAServiceRequest struct {
 	IsuUUID       string `json:"isu_uuid"`
 }
 
-var userMap = map[string]struct{}{
-	"confident_chatelet":  {},
-	"crazy_poincare":      {},
-	"dreamy_archimedes":   {},
-	"focused_hamilton":    {},
-	"frosty_herschel":     {},
-	"gifted_cerf":         {},
-	"goofy_ganguly":       {},
-	"happy_haibt":         {},
-	"intelligent_johnson": {},
-	"isucon":              {},
-	"isucon1":             {},
-	"isucon2":             {},
-	"naughty_swartz":      {},
-	"peaceful_aryabhata":  {},
-	"strange_dubinsky":    {},
-	"wonderful_goldstine": {},
-}
-
 func getEnv(key string, defaultValue string) string {
 	val := os.Getenv(key)
 	if val != "" {
@@ -295,19 +276,15 @@ func getUserIDFromSession(c echo.Context) (string, int, error) {
 	}
 
 	jiaUserID := _jiaUserID.(string)
-	// var count int
+	var count int
 
-	// err = db.Get(&count, "SELECT COUNT(*) FROM `user` WHERE `jia_user_id` = ?",
-	// 	jiaUserID)
-	// if err != nil {
-	// 	return "", http.StatusInternalServerError, fmt.Errorf("db error: %v", err)
-	// }
+	err = db.Get(&count, "SELECT COUNT(*) FROM `user` WHERE `jia_user_id` = ?",
+		jiaUserID)
+	if err != nil {
+		return "", http.StatusInternalServerError, fmt.Errorf("db error: %v", err)
+	}
 
-	// if count == 0 {
-	// 	return "", http.StatusUnauthorized, fmt.Errorf("not found: user")
-	// }
-	_, ok = userMap[jiaUserID]
-	if !ok {
+	if count == 0 {
 		return "", http.StatusUnauthorized, fmt.Errorf("not found: user")
 	}
 
