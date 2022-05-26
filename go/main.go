@@ -1203,7 +1203,7 @@ func postIsuCondition(c echo.Context) error {
 			return c.String(http.StatusBadRequest, "bad request body")
 		}
 
-		vs[i] = fmt.Sprintf(`("%s", "%v", %v, "%s", "%s")`, jiaIsuUUID, timestamp, cond.IsSitting, cond.Condition, cond.Message)
+		vs[i] = fmt.Sprintf(`("%s", "%s", %v, "%s", "%s")`, jiaIsuUUID, timestamp.Format("2006-01-02 15:04:05"), cond.IsSitting, cond.Condition, cond.Message)
 	}
 	_, err = tx.Exec(
 		fmt.Sprintf(
