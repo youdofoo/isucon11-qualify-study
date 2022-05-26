@@ -1094,18 +1094,18 @@ func getTrend(c echo.Context) error {
 	res := []TrendResponse{}
 
 	for _, character := range characterList {
-		query := strings.Join(
-			[]string{
-				"SELECT c.`condition` AS `condition`, isu.`id` AS `isu_id`, c.`timestamp` AS `timestamp` FROM isu_condition AS c",
-				"JOIN ( SELECT `jia_isu_uuid` FROM isu WHERE `character` = ? ) AS isu",
-				"ON c.`jia_isu_uuid` = isu.`jia_isu_uuid`",
-				"WHERE NOT EXISTS (",
-				"SELECT 1 FROM isu_condition AS c2",
-				"WHERE c2.`jia_isu_uuid` = c.`jia_isu_uuid` AND c2.`timestamp` > c.`timestamp`",
-				")",
-			},
-			"\n",
-		)
+		query := `
+			SELECT c.condition AS condition, isu.id AS isu_id, c.timestamp AS timestamp FROM isu_condition AS c
+			JOIN (
+				SELECT jia_isu_uuid FROM isu WHERE character = ?
+			) AS isu
+			ON c.jia_isu_uuid = isu.jia_isu_uuid
+			WHERE NOT EXISTS (
+				SELECT 1 FROM isu_condition AS c2
+				WHERE c2.jia_isu_uuid = c.jia_isu_uuid
+				AND c2.timestamp > c.timestamp
+			)
+		`
 		conditions := []lastCondition{}
 		err = db.Select(&conditions, query, character.Character)
 		if err != nil {
