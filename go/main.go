@@ -263,8 +263,8 @@ func main() {
 }
 
 type User struct {
-	JiaUserID string    `json:"jia_user_id"`
-	CreatedAt time.Time `json:"created_at"`
+	JiaUserID string    `db:"jia_user_id"`
+	CreatedAt time.Time `db:"created_at"`
 }
 
 func loadUsers() {
