@@ -1,3 +1,10 @@
+.PHONY: install-alp
+install-alp:
+	wget https://github.com/tkuchiki/alp/releases/download/v1.0.8/alp_linux_amd64.zip \
+	&& sudo unzip alp_linux_amd64.zip -d /usr/local/bin \
+	&& sudo chmod 755 /usr/local/bin
+
+
 NGINX_LOG=/var/log/nginx/access.log
 MATCHING="/api/isu/[^/]+/icon","/assets/.+\.(js|svg|css)","/api/isu/[^/]+","/api/isu/[^/]+/graph","/api/condition/[^/]+","/isu/[^/]+","/isu/[^/]+/condition","/isu/[^/]+/graph"
 FIELDS=count,2xx,3xx,5xx,method,uri,min,max,sum,avg,p99
