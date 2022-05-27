@@ -674,7 +674,7 @@ func postIsu(c echo.Context) error {
 }
 
 func iconPath(jiaIsuUUID string) string {
-	return frontendContentsPath + "/assets/icons" + jiaIsuUUID
+	return frontendContentsPath + "/assets/icons/" + jiaIsuUUID
 }
 
 // GET /api/isu/:jia_isu_uuid
