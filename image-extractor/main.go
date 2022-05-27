@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -65,7 +66,8 @@ func main() {
 
 	err = db.Select(&isuList, "SELECT * FROM `isu`")
 	if err != nil {
-		log.Fatalf("failed to select isu: %v", err)
+		mysqlErr, _ := err.(*mysql.MySQLError)
+		log.Fatalf("failed to select isu: %v", mysqlErr)
 	}
 
 	for _, isu := range isuList {
