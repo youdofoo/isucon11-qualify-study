@@ -347,7 +347,7 @@ func postInitialize(c echo.Context) error {
 	}
 
 	for _, isu := range isuList {
-		file, err := os.Create(iconPath(isu.JIAIsuUUID))
+		file, err := os.Create(iconPath(isu.JIAUserID, isu.JIAIsuUUID))
 		if err != nil {
 			c.Logger().Errorf("failed to create file: %v", err)
 			return c.NoContent(http.StatusInternalServerError)
@@ -599,7 +599,7 @@ func postIsu(c echo.Context) error {
 		}
 	}
 
-	imageFile, err := os.Create(iconPath(jiaIsuUUID))
+	imageFile, err := os.Create(iconPath(jiaUserID, jiaIsuUUID))
 	if err != nil {
 		c.Logger().Errorf("image file create faild: %v", err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -697,7 +697,7 @@ func postIsu(c echo.Context) error {
 	return c.JSON(http.StatusCreated, isu)
 }
 
-func iconPath(jiaIsuUUID string) string {
+func iconPath(jiaUserID, jiaIsuUUID string) string {
 	return frontendContentsPath + "/assets/icons/" + jiaIsuUUID
 }
 
@@ -734,7 +734,7 @@ func getIsuID(c echo.Context) error {
 // GET /api/isu/:jia_isu_uuid/icon
 // ISUのアイコンを取得
 func getIsuIcon(c echo.Context) error {
-	_, errStatusCode, err := getUserIDFromSession(c)
+	jiaUserID, errStatusCode, err := getUserIDFromSession(c)
 	if err != nil {
 		if errStatusCode == http.StatusUnauthorized {
 			return c.String(http.StatusUnauthorized, "you are not signed in")
@@ -746,7 +746,7 @@ func getIsuIcon(c echo.Context) error {
 
 	jiaIsuUUID := c.Param("jia_isu_uuid")
 
-	c.Response().Header().Set("X-Accel-Redirect", "/assets/icons/"+jiaIsuUUID)
+	c.Response().Header().Set("X-Accel-Redirect", fmt.Sprintf("/assets/icons/%s.%s", jiaUserID, jiaIsuUUID))
 
 	// var image []byte
 	// err = db.Get(&image, "SELECT `image` FROM `isu` WHERE `jia_user_id` = ? AND `jia_isu_uuid` = ?",
