@@ -32,3 +32,7 @@ deploy:
 reset-log:
 	sudo bash -c 'echo "" > /var/log/nginx/access.log'
 	sudo bash -c 'echo "" > /var/log/mysql/mariadb-slow.log'
+
+.PHONY: pprof
+	go tool pprof -http=localhost:9999 http://localhost:6060/debug/pprof/profile
+	
