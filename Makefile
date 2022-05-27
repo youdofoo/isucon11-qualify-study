@@ -34,5 +34,5 @@ reset-log:
 	sudo bash -c 'echo "" > /var/log/mysql/mariadb-slow.log'
 
 .PHONY: pprof
+pprof:
 	go tool pprof -http=localhost:9999 http://localhost:6060/debug/pprof/profile
-	
