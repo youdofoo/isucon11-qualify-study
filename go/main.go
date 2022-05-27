@@ -575,6 +575,18 @@ func postIsu(c echo.Context) error {
 		}
 	}
 
+	imageFile, err := os.Create(frontendContentsPath + "/assets/icons" + jiaIsuUUID)
+	if err != nil {
+		c.Logger().Errorf("image file create faild: %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+	defer imageFile.Close()
+	_, err = imageFile.Write(image)
+	if err != nil {
+		c.Logger().Errorf("image file write faild: %v", err)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
 	tx, err := db.Beginx()
 	if err != nil {
 		c.Logger().Errorf("db error: %v", err)
@@ -583,8 +595,8 @@ func postIsu(c echo.Context) error {
 	defer tx.Rollback()
 
 	_, err = tx.Exec("INSERT INTO `isu`"+
-		"	(`jia_isu_uuid`, `name`, `image`, `jia_user_id`) VALUES (?, ?, ?, ?)",
-		jiaIsuUUID, isuName, image, jiaUserID)
+		"	(`jia_isu_uuid`, `name`, `jia_user_id`) VALUES (?, ?, ?, ?)",
+		jiaIsuUUID, isuName, jiaUserID)
 	if err != nil {
 		mysqlErr, ok := err.(*mysql.MySQLError)
 
@@ -661,6 +673,10 @@ func postIsu(c echo.Context) error {
 	return c.JSON(http.StatusCreated, isu)
 }
 
+func iconURI(jiaIsuUUID string) string {
+	return frontendContentsPath + "/assets/icons" + jiaIsuUUID
+}
+
 // GET /api/isu/:jia_isu_uuid
 // ISUの情報を取得
 func getIsuID(c echo.Context) error {
@@ -694,7 +710,7 @@ func getIsuID(c echo.Context) error {
 // GET /api/isu/:jia_isu_uuid/icon
 // ISUのアイコンを取得
 func getIsuIcon(c echo.Context) error {
-	jiaUserID, errStatusCode, err := getUserIDFromSession(c)
+	_, errStatusCode, err := getUserIDFromSession(c)
 	if err != nil {
 		if errStatusCode == http.StatusUnauthorized {
 			return c.String(http.StatusUnauthorized, "you are not signed in")
@@ -706,19 +722,21 @@ func getIsuIcon(c echo.Context) error {
 
 	jiaIsuUUID := c.Param("jia_isu_uuid")
 
-	var image []byte
-	err = db.Get(&image, "SELECT `image` FROM `isu` WHERE `jia_user_id` = ? AND `jia_isu_uuid` = ?",
-		jiaUserID, jiaIsuUUID)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return c.String(http.StatusNotFound, "not found: isu")
-		}
+	c.Response().Header().Set("X-Accel-Redirect", "/icons/"+jiaIsuUUID)
 
-		c.Logger().Errorf("db error: %v", err)
-		return c.NoContent(http.StatusInternalServerError)
-	}
+	// var image []byte
+	// err = db.Get(&image, "SELECT `image` FROM `isu` WHERE `jia_user_id` = ? AND `jia_isu_uuid` = ?",
+	// 	jiaUserID, jiaIsuUUID)
+	// if err != nil {
+	// 	if errors.Is(err, sql.ErrNoRows) {
+	// 		return c.String(http.StatusNotFound, "not found: isu")
+	// 	}
 
-	return c.Blob(http.StatusOK, "", image)
+	// 	c.Logger().Errorf("db error: %v", err)
+	// 	return c.NoContent(http.StatusInternalServerError)
+	// }
+
+	return c.NoContent(http.StatusOK)
 }
 
 // GET /api/isu/:jia_isu_uuid/graph
