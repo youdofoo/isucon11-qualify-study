@@ -337,6 +337,30 @@ func postInitialize(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
+	isuList := make([]Isu, 0)
+
+	err = db.Select(&isuList, "SELECT * FROM `isu`")
+	if err != nil {
+		mysqlErr, _ := err.(*mysql.MySQLError)
+		c.Logger().Errorf("failed to select isu: %v", mysqlErr)
+		return c.NoContent(http.StatusInternalServerError)
+	}
+
+	for _, isu := range isuList {
+		file, err := os.Create(iconPath(isu.JIAIsuUUID))
+		if err != nil {
+			c.Logger().Errorf("failed to create file: %v", err)
+			return c.NoContent(http.StatusInternalServerError)
+		}
+		_, err = file.Write(isu.Image)
+		if err != nil {
+			file.Close()
+			c.Logger().Errorf("failed to write file: %v", err)
+			return c.NoContent(http.StatusInternalServerError)
+		}
+		file.Close()
+	}
+
 	return c.JSON(http.StatusOK, InitializeResponse{
 		Language: "go",
 	})
