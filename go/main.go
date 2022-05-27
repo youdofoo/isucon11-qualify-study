@@ -722,7 +722,7 @@ func getIsuIcon(c echo.Context) error {
 
 	jiaIsuUUID := c.Param("jia_isu_uuid")
 
-	c.Response().Header().Set("X-Accel-Redirect", "/assets/icons"+jiaIsuUUID)
+	c.Response().Header().Set("X-Accel-Redirect", "/assets/icons/"+jiaIsuUUID)
 
 	// var image []byte
 	// err = db.Get(&image, "SELECT `image` FROM `isu` WHERE `jia_user_id` = ? AND `jia_isu_uuid` = ?",
