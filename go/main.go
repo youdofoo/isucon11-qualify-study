@@ -86,6 +86,7 @@ type IsuCondition struct {
 	Timestamp  time.Time `db:"timestamp"`
 	IsSitting  bool      `db:"is_sitting"`
 	Condition  string    `db:"condition"`
+	Level      string    `db:"level"`
 	Message    string    `db:"message"`
 	CreatedAt  time.Time `db:"created_at"`
 }
@@ -963,10 +964,11 @@ func getIsuConditions(c echo.Context) error {
 	if conditionLevelCSV == "" {
 		return c.String(http.StatusBadRequest, "missing: condition_level")
 	}
-	conditionLevel := map[string]interface{}{}
-	for _, level := range strings.Split(conditionLevelCSV, ",") {
-		conditionLevel[level] = struct{}{}
-	}
+	levels := strings.Split(conditionLevelCSV, ",")
+	// conditionLevel := map[string]interface{}{}
+	// for _, level := range strings.Split(conditionLevelCSV, ",") {
+	// 	conditionLevel[level] = struct{}{}
+	// }
 
 	startTimeStr := c.QueryParam("start_time")
 	var startTime time.Time
@@ -992,7 +994,7 @@ func getIsuConditions(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	conditionsResponse, err := getIsuConditionsFromDB(db, jiaIsuUUID, endTime, conditionLevel, startTime, conditionLimit, isuName)
+	conditionsResponse, err := getIsuConditionsFromDB(db, jiaIsuUUID, endTime, levels, startTime, conditionLimit, isuName)
 	if err != nil {
 		c.Logger().Errorf("db error: %v", err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -1001,26 +1003,30 @@ func getIsuConditions(c echo.Context) error {
 }
 
 // ISUのコンディションをDBから取得
-func getIsuConditionsFromDB(db *sqlx.DB, jiaIsuUUID string, endTime time.Time, conditionLevel map[string]interface{}, startTime time.Time,
+func getIsuConditionsFromDB(db *sqlx.DB, jiaIsuUUID string, endTime time.Time, levels []string, startTime time.Time,
 	limit int, isuName string) ([]*GetIsuConditionResponse, error) {
 
 	conditions := []IsuCondition{}
 	var err error
 
+	levelsSet := levelsStr(levels)
+
 	if startTime.IsZero() {
 		err = db.Select(&conditions,
 			"SELECT * FROM `isu_condition` WHERE `jia_isu_uuid` = ?"+
 				"	AND `timestamp` < ?"+
-				"	ORDER BY `timestamp` DESC",
-			jiaIsuUUID, endTime,
+				"	AND `level` IN "+levelsSet+
+				"	ORDER BY `timestamp` DESC LIMIT ?",
+			jiaIsuUUID, endTime, limit,
 		)
 	} else {
 		err = db.Select(&conditions,
 			"SELECT * FROM `isu_condition` WHERE `jia_isu_uuid` = ?"+
 				"	AND `timestamp` < ?"+
 				"	AND ? <= `timestamp`"+
-				"	ORDER BY `timestamp` DESC",
-			jiaIsuUUID, endTime, startTime,
+				"	AND `level` IN "+levelsSet+
+				"	ORDER BY `timestamp` DESC LIMIT ?",
+			jiaIsuUUID, endTime, startTime, limit,
 		)
 	}
 	if err != nil {
@@ -1029,30 +1035,27 @@ func getIsuConditionsFromDB(db *sqlx.DB, jiaIsuUUID string, endTime time.Time, c
 
 	conditionsResponse := []*GetIsuConditionResponse{}
 	for _, c := range conditions {
-		cLevel, err := calculateConditionLevel(c.Condition)
-		if err != nil {
-			continue
+
+		data := GetIsuConditionResponse{
+			JIAIsuUUID:     c.JIAIsuUUID,
+			IsuName:        isuName,
+			Timestamp:      c.Timestamp.Unix(),
+			IsSitting:      c.IsSitting,
+			Condition:      c.Condition,
+			ConditionLevel: c.Level,
+			Message:        c.Message,
 		}
-
-		if _, ok := conditionLevel[cLevel]; ok {
-			data := GetIsuConditionResponse{
-				JIAIsuUUID:     c.JIAIsuUUID,
-				IsuName:        isuName,
-				Timestamp:      c.Timestamp.Unix(),
-				IsSitting:      c.IsSitting,
-				Condition:      c.Condition,
-				ConditionLevel: cLevel,
-				Message:        c.Message,
-			}
-			conditionsResponse = append(conditionsResponse, &data)
-		}
+		conditionsResponse = append(conditionsResponse, &data)
 	}
-
-	if len(conditionsResponse) > limit {
-		conditionsResponse = conditionsResponse[:limit]
-	}
-
 	return conditionsResponse, nil
+}
+
+func levelsStr(levels []string) string {
+	ls := make([]string, len(levels))
+	for i := range levels {
+		ls[i] = fmt.Sprintf(`"%s"`, levels[i])
+	}
+	return fmt.Sprintf("(%s)", strings.Join(ls, ","))
 }
 
 // ISUのコンディションの文字列からコンディションレベルを計算
@@ -1202,13 +1205,14 @@ func postIsuCondition(c echo.Context) error {
 		if !isValidConditionFormat(cond.Condition) {
 			return c.String(http.StatusBadRequest, "bad request body")
 		}
+		level, _ := calculateConditionLevel(cond.Condition)
 
-		vs[i] = fmt.Sprintf(`("%s", "%s", %v, "%s", "%s")`, jiaIsuUUID, timestamp.Format("2006-01-02 15:04:05"), cond.IsSitting, cond.Condition, cond.Message)
+		vs[i] = fmt.Sprintf(`("%s", "%s", %v, "%s", "%s", "%s")`, jiaIsuUUID, timestamp.Format("2006-01-02 15:04:05"), cond.IsSitting, cond.Condition, level, cond.Message)
 	}
 	_, err = db.Exec(
 		fmt.Sprintf(
 			"INSERT INTO `isu_condition`"+
-				"	(`jia_isu_uuid`, `timestamp`, `is_sitting`, `condition`, `message`)"+
+				"	(`jia_isu_uuid`, `timestamp`, `is_sitting`, `condition`, `level`, `message`)"+
 				"	VALUES %s",
 			strings.Join(vs, ","),
 		),
