@@ -575,7 +575,7 @@ func postIsu(c echo.Context) error {
 		}
 	}
 
-	imageFile, err := os.Create(frontendContentsPath + "/assets/icons" + jiaIsuUUID)
+	imageFile, err := os.Create(iconPath(jiaIsuUUID))
 	if err != nil {
 		c.Logger().Errorf("image file create faild: %v", err)
 		return c.NoContent(http.StatusInternalServerError)
@@ -673,7 +673,7 @@ func postIsu(c echo.Context) error {
 	return c.JSON(http.StatusCreated, isu)
 }
 
-func iconURI(jiaIsuUUID string) string {
+func iconPath(jiaIsuUUID string) string {
 	return frontendContentsPath + "/assets/icons" + jiaIsuUUID
 }
 
@@ -722,7 +722,7 @@ func getIsuIcon(c echo.Context) error {
 
 	jiaIsuUUID := c.Param("jia_isu_uuid")
 
-	c.Response().Header().Set("X-Accel-Redirect", "/icons/"+jiaIsuUUID)
+	c.Response().Header().Set("X-Accel-Redirect", "/assets/icons"+jiaIsuUUID)
 
 	// var image []byte
 	// err = db.Get(&image, "SELECT `image` FROM `isu` WHERE `jia_user_id` = ? AND `jia_isu_uuid` = ?",
