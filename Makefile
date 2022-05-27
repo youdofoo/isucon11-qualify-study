@@ -7,7 +7,7 @@ install-alp:
 
 
 NGINX_LOG=/var/log/nginx/access.log
-MATCHING="/api/isu/[^/]+/icon","/assets/.+\.(js|svg|css)","/api/isu/[^/]+","/api/isu/[^/]+/graph","/api/condition/[^/]+","/isu/[^/]+","/isu/[^/]+/condition","/isu/[^/]+/graph"
+MATCHING="/api/isu/[^/]+/icon","/assets/.+\.(js|svg|css)","/api/isu/[^/]+/graph","/api/isu/[^/]+","/api/condition/[^/]+","/isu/[^/]+/condition","/isu/[^/]+/graph","/isu/[^/]+"
 FIELDS=count,2xx,3xx,5xx,method,uri,min,max,sum,avg,p99
 
 .PHONY: alp
