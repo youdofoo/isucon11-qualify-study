@@ -213,6 +213,8 @@ func main() {
 	go func() {
 		log.Print(http.ListenAndServe("localhost:6060", nil))
 	}()
+	go insertConditionLoop()
+
 	e := echo.New()
 	e.Debug = true
 	e.Logger.SetLevel(log.DEBUG)
@@ -1210,6 +1212,34 @@ func getTrend(c echo.Context) error {
 	return c.JSON(http.StatusOK, res)
 }
 
+var chCondition chan []string
+
+func insertConditionLoop() {
+	tick := time.Tick(1 * time.Second)
+
+	conditions := make([]string, 0, 2000)
+	for {
+		select {
+		case conds := <-chCondition:
+			conditions = append(conditions, conds...)
+		case <-tick:
+			insertConditions(conditions)
+			conditions = make([]string, 0, 2000)
+		}
+	}
+}
+
+func insertConditions(conditions []string) {
+	db.Exec(
+		fmt.Sprintf(
+			"INSERT INTO `isu_condition`"+
+				"	(`jia_isu_uuid`, `timestamp`, `is_sitting`, `condition`, `level`, `message`)"+
+				"	VALUES %s",
+			strings.Join(conditions, ","),
+		),
+	)
+}
+
 // POST /api/condition/:jia_isu_uuid
 // ISUからのコンディションを受け取る
 func postIsuCondition(c echo.Context) error {
@@ -1261,24 +1291,8 @@ func postIsuCondition(c echo.Context) error {
 
 		vs[i] = fmt.Sprintf(`("%s", "%s", %v, "%s", "%s", "%s")`, jiaIsuUUID, timestamp.Format("2006-01-02 15:04:05"), cond.IsSitting, cond.Condition, level, cond.Message)
 	}
-	_, err = db.Exec(
-		fmt.Sprintf(
-			"INSERT INTO `isu_condition`"+
-				"	(`jia_isu_uuid`, `timestamp`, `is_sitting`, `condition`, `level`, `message`)"+
-				"	VALUES %s",
-			strings.Join(vs, ","),
-		),
-	)
-	if err != nil {
-		c.Logger().Errorf("db error: %v", err)
-		return c.NoContent(http.StatusInternalServerError)
-	}
 
-	// err = tx.Commit()
-	// if err != nil {
-	// 	c.Logger().Errorf("db error: %v", err)
-	// 	return c.NoContent(http.StatusInternalServerError)
-	// }
+	chCondition <- vs
 
 	return c.NoContent(http.StatusAccepted)
 }
