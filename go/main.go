@@ -1221,11 +1221,13 @@ func insertConditionLoop() {
 	for {
 		select {
 		case conds := <-chCondition:
+			log.Print(conds)
 			conditions = append(conditions, conds...)
 		case <-tick:
 			if len(conditions) == 0 {
 				continue
 			}
+			log.Print("insert")
 			insertConditions(conditions)
 			conditions = make([]string, 0, 2000)
 		}
