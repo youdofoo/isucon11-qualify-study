@@ -213,7 +213,7 @@ func main() {
 	go func() {
 		log.Print(http.ListenAndServe("localhost:6060", nil))
 	}()
-	chCondition = make(chan []string)
+	chCondition = make(chan []string, 1000)
 	go insertConditionLoop()
 
 	e := echo.New()
@@ -1216,7 +1216,7 @@ func getTrend(c echo.Context) error {
 var chCondition chan []string
 
 func insertConditionLoop() {
-	tick := time.Tick(60 * time.Millisecond)
+	tick := time.Tick(120 * time.Millisecond)
 
 	conditions := make([]string, 0, 2000)
 	for {
