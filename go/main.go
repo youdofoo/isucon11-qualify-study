@@ -1216,7 +1216,7 @@ func getTrend(c echo.Context) error {
 var chCondition chan []string
 
 func insertConditionLoop() {
-	tick := time.Tick(120 * time.Millisecond)
+	tick := time.Tick(10 * time.Millisecond)
 
 	conditions := make([]string, 0, 2000)
 	for {
