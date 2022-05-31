@@ -1216,19 +1216,17 @@ func getTrend(c echo.Context) error {
 var chCondition chan []string
 
 func insertConditionLoop() {
-	tick := time.Tick(120 * time.Millisecond)
+	tick := time.Tick(60 * time.Millisecond)
 
 	conditions := make([]string, 0, 2000)
 	for {
 		select {
 		case conds := <-chCondition:
-			log.Print(len(conds))
 			conditions = append(conditions, conds...)
 		case <-tick:
 			if len(conditions) == 0 {
 				continue
 			}
-			log.Print("insert")
 			insertConditions(conditions)
 			conditions = make([]string, 0, 2000)
 		}
