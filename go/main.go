@@ -213,6 +213,7 @@ func main() {
 	go func() {
 		log.Print(http.ListenAndServe("localhost:6060", nil))
 	}()
+	chCondition = make(chan []string)
 	go insertConditionLoop()
 
 	e := echo.New()
@@ -1221,7 +1222,7 @@ func insertConditionLoop() {
 	for {
 		select {
 		case conds := <-chCondition:
-			log.Print(conds)
+			log.Print(len(conds))
 			conditions = append(conditions, conds...)
 		case <-tick:
 			if len(conditions) == 0 {
