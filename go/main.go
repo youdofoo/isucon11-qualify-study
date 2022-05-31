@@ -1223,6 +1223,9 @@ func insertConditionLoop() {
 		case conds := <-chCondition:
 			conditions = append(conditions, conds...)
 		case <-tick:
+			if len(conditions) == 0 {
+				continue
+			}
 			insertConditions(conditions)
 			conditions = make([]string, 0, 2000)
 		}
